@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sketchpad</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="toolbar top-toolbar">
+        <button
+          onclick="setMode('freehand')"
+          class="tool-btn"
+          id="btn-freehand"
+        >
+          ✏️ Freehand
+        </button>
+        <button onclick="setMode('line')" class="tool-btn" id="btn-line">
+          📏 Line
+        </button>
+        <button
+          onclick="setMode('rectangle')"
+          class="tool-btn"
+          id="btn-rectangle"
+        >
+          ⬛ Rectangle
+        </button>
+        <button onclick="setMode('square')" class="tool-btn" id="btn-square">
+          🟦 Square
+        </button>
+        <button onclick="setMode('ellipse')" class="tool-btn" id="btn-ellipse">
+          ⭕ Ellipse
+        </button>
+        <button onclick="setMode('circle')" class="tool-btn" id="btn-circle">
+          🔵 Circle
+        </button>
+        <button onclick="setMode('polygon')" class="tool-btn" id="btn-polygon">
+          🔺 Polygon
+        </button>
+        <button onclick="stopDrawingPolygon()" class="tool-btn">
+          ⛔ Stop Polygon
+        </button>
+        <button onclick="cutObject()" class="tool-btn">✂️ Cut</button>
+        <button onclick="copyObject()" class="tool-btn">📋 Copy</button>
+        <button onclick="pasteObject()" class="tool-btn">📎 Paste</button>
+        <button onclick="undo()" class="tool-btn">↩️ Undo</button>
+        <button onclick="redo()" class="tool-btn">↪️ Redo</button>
+        <button onclick="saveDrawing()" class="tool-btn">💾 Save</button>
+        <button onclick="loadDrawing()" class="tool-btn">📂 Load</button>
+      </div>
+      <div class="canvas-container">
+        <canvas id="drawingCanvas"></canvas>
+      </div>
+      <div class="toolbar bottom-toolbar">
+        <button onclick="setMode('select')" class="tool-btn" id="btn-select">
+          🖱️ Select
+        </button>
+        <button onclick="ungroupObjects()" class="tool-btn">🔓 Ungroup</button>
+        <input type="color" id="colorPicker" value="#000000" />
+        <span id="currentMode" class="status">Mode: Freehand</span>
+        <span id="currentColor" class="status">Color: #000000</span>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
