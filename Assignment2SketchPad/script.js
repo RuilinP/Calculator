@@ -1,6 +1,6 @@
-let canvas = document.getElementById("drawingCanvas");
-let ctx = canvas.getContext("2d");
-function resizeCanvas() {
+let drawingSurface = document.getElementById("drawingCanvas");
+let drawingContext = drawingSurface.getContext("2d");
+function adjustCanvasSize() {
 	const headerHeight = document.querySelector(".app-header").offsetHeight;
 	const footerHeight = document.querySelector(".app-footer").offsetHeight;
 	const leftToolbarWidth =
@@ -9,20 +9,20 @@ function resizeCanvas() {
 		document.querySelector(".right-toolbar").offsetWidth;
 	const containerPadding = 40;
 
-	canvas.width =
+	drawingSurface.width =
 		window.innerWidth -
 		leftToolbarWidth -
 		rightToolbarWidth -
 		containerPadding;
-	canvas.height =
+	drawingSurface.height =
 		window.innerHeight - headerHeight - footerHeight - containerPadding;
 }
 
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
+window.addEventListener("resize", adjustCanvasSize);
+adjustCanvasSize();
 
-let drawing = false;
-let mode = "freehand";
+let isDrawing = false;
+let drawingMode = "freehand";
 let startX, startY;
 let color = "#000000";
 let shapes = [];
@@ -42,13 +42,13 @@ document.getElementById("colorPicker").addEventListener("input", (e) => {
 });
 
 function setMode(newMode) {
-	mode = newMode;
+	drawingMode = newMode;
 	document.getElementById("currentMode").textContent =
-		mode.charAt(0).toUpperCase() + mode.slice(1);
+		drawingMode.charAt(0).toUpperCase() + drawingMode.slice(1);
 	document
 		.querySelectorAll(".tool-btn")
 		.forEach((btn) => btn.classList.remove("active"));
-	document.getElementById(`btn-${mode}`).classList.add("active");
+	document.getElementById(`btn-${drawingMode}`).classList.add("active");
 
 	if (newMode !== "polygon") {
 		polygonVertices = [];
@@ -69,12 +69,12 @@ function stopDrawingPolygon() {
 	}
 }
 
-canvas.addEventListener("mousedown", (e) => {
+drawingSurface.addEventListener("mousedown", (e) => {
 	startX = e.offsetX;
 	startY = e.offsetY;
-	ctx.strokeStyle = color;
+	drawingContext.strokeStyle = color;
 
-	if (mode === "select") {
+	if (drawingMode === "select") {
 		let shape = selectObject(startX, startY);
 		if (shape) {
 			if (!selectedShapes.includes(shape)) {
@@ -84,7 +84,7 @@ canvas.addEventListener("mousedown", (e) => {
 		} else {
 			selectedShapes = [];
 		}
-	} else if (mode === "polygon") {
+	} else if (drawingMode === "polygon") {
 		if (!polygonDrawing) {
 			polygonDrawing = true;
 			polygonVertices = [[startX, startY]];
@@ -92,17 +92,17 @@ canvas.addEventListener("mousedown", (e) => {
 			polygonVertices.push([startX, startY]);
 		}
 	} else {
-		drawing = true;
-		if (mode === "freehand") {
-			ctx.beginPath();
-			ctx.moveTo(startX, startY);
+		isDrawing = true;
+		if (drawingMode === "freehand") {
+			drawingContext.beginPath();
+			drawingContext.moveTo(startX, startY);
 		}
 	}
 	redrawShapes();
 });
 
-canvas.addEventListener("mousemove", (e) => {
-	if (!drawing && !dragging && mode !== "polygon") return;
+drawingSurface.addEventListener("mousemove", (e) => {
+	if (!isDrawing && !dragging && drawingMode !== "polygon") return;
 
 	let currentX = e.offsetX;
 	let currentY = e.offsetY;
@@ -111,47 +111,52 @@ canvas.addEventListener("mousemove", (e) => {
 		moveObjects(currentX - startX, currentY - startY);
 		startX = currentX;
 		startY = currentY;
-	} else if (drawing) {
-		switch (mode) {
+	} else if (isDrawing) {
+		switch (drawingMode) {
 			case "freehand":
-				ctx.lineTo(currentX, currentY);
-				ctx.stroke();
+				drawingContext.lineTo(currentX, currentY);
+				drawingContext.stroke();
 				break;
 			case "line":
 				redrawShapes();
-				ctx.beginPath();
-				ctx.moveTo(startX, startY);
-				ctx.lineTo(currentX, currentY);
-				ctx.stroke();
-				ctx.closePath();
+				drawingContext.beginPath();
+				drawingContext.moveTo(startX, startY);
+				drawingContext.lineTo(currentX, currentY);
+				drawingContext.stroke();
+				drawingContext.closePath();
 				break;
 			case "rectangle":
 				redrawShapes();
-				ctx.beginPath();
-				ctx.rect(startX, startY, currentX - startX, currentY - startY);
-				ctx.stroke();
-				ctx.closePath();
+				drawingContext.beginPath();
+				drawingContext.rect(
+					startX,
+					startY,
+					currentX - startX,
+					currentY - startY
+				);
+				drawingContext.stroke();
+				drawingContext.closePath();
 				break;
 			case "square":
 				redrawShapes();
-				ctx.beginPath();
+				drawingContext.beginPath();
 				const side = Math.min(
 					Math.abs(currentX - startX),
 					Math.abs(currentY - startY)
 				);
-				ctx.rect(
+				drawingContext.rect(
 					startX,
 					startY,
 					Math.sign(currentX - startX) * side,
 					Math.sign(currentY - startY) * side
 				);
-				ctx.stroke();
-				ctx.closePath();
+				drawingContext.stroke();
+				drawingContext.closePath();
 				break;
 			case "ellipse":
 				redrawShapes();
-				ctx.beginPath();
-				ctx.ellipse(
+				drawingContext.beginPath();
+				drawingContext.ellipse(
 					startX,
 					startY,
 					Math.abs(currentX - startX),
@@ -160,71 +165,84 @@ canvas.addEventListener("mousemove", (e) => {
 					0,
 					Math.PI * 2
 				);
-				ctx.stroke();
-				ctx.closePath();
+				drawingContext.stroke();
+				drawingContext.closePath();
 				break;
 			case "circle":
 				redrawShapes();
-				ctx.beginPath();
+				drawingContext.beginPath();
 				const radius = Math.min(
 					Math.abs(currentX - startX),
 					Math.abs(currentY - startY)
 				);
-				ctx.ellipse(startX, startY, radius, radius, 0, 0, Math.PI * 2);
-				ctx.stroke();
-				ctx.closePath();
+				drawingContext.ellipse(
+					startX,
+					startY,
+					radius,
+					radius,
+					0,
+					0,
+					Math.PI * 2
+				);
+				drawingContext.stroke();
+				drawingContext.closePath();
 				break;
 		}
-	} else if (mode === "polygon" && polygonDrawing) {
+	} else if (drawingMode === "polygon" && polygonDrawing) {
 		redrawShapes();
 		drawPolygon([...polygonVertices, [currentX, currentY]]);
 	}
 });
 
-canvas.addEventListener("mouseup", (e) => {
-	drawing = false;
+drawingSurface.addEventListener("mouseup", (e) => {
+	isDrawing = false;
 	dragging = false;
-	if (mode === "freehand") {
+	if (drawingMode === "freehand") {
 		shapes.push({
 			type: "freehand",
-			path: ctx.getImageData(0, 0, canvas.width, canvas.height),
+			path: drawingContext.getImageData(
+				0,
+				0,
+				drawingSurface.width,
+				drawingSurface.height
+			),
 			color: color,
 		});
-		ctx.beginPath();
+		drawingContext.beginPath();
 		saveState();
-	} else if (mode !== "select" && mode !== "polygon") {
+	} else if (drawingMode !== "select" && drawingMode !== "polygon") {
 		saveShape(e.offsetX, e.offsetY);
 	}
-	ctx.closePath();
+	drawingContext.closePath();
 });
 
-canvas.addEventListener("dblclick", () => {
+drawingSurface.addEventListener("dblclick", () => {
 	stopDrawingPolygon();
 });
 
 function drawShape(drawFunc) {
 	redrawShapes();
-	ctx.beginPath();
+	drawingContext.beginPath();
 	drawFunc();
-	ctx.stroke();
-	ctx.closePath();
+	drawingContext.stroke();
+	drawingContext.closePath();
 }
 
 function drawPolygon(vertices) {
 	if (vertices.length > 1) {
-		ctx.beginPath();
-		ctx.moveTo(vertices[0][0], vertices[0][1]);
+		drawingContext.beginPath();
+		drawingContext.moveTo(vertices[0][0], vertices[0][1]);
 		for (let i = 1; i < vertices.length; i++) {
-			ctx.lineTo(vertices[i][0], vertices[i][1]);
+			drawingContext.lineTo(vertices[i][0], vertices[i][1]);
 		}
-		ctx.stroke();
-		ctx.closePath();
+		drawingContext.stroke();
+		drawingContext.closePath();
 	}
 }
 
 function saveShape(endX, endY) {
 	shapes.push({
-		type: mode,
+		type: drawingMode,
 		startX: startX,
 		startY: startY,
 		endX: endX,
@@ -248,22 +266,22 @@ function savePolygon() {
 }
 
 function redrawShapes() {
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	drawingContext.clearRect(0, 0, drawingSurface.width, drawingSurface.height);
 	shapes.forEach((shape) => {
-		ctx.strokeStyle = shape.color;
-		ctx.beginPath();
+		drawingContext.strokeStyle = shape.color;
+		drawingContext.beginPath();
 		switch (shape.type) {
 			case "freehand":
 				if (shape.path instanceof ImageData) {
-					ctx.putImageData(shape.path, 0, 0);
+					drawingContext.putImageData(shape.path, 0, 0);
 				}
 				break;
 			case "line":
-				ctx.moveTo(shape.startX, shape.startY);
-				ctx.lineTo(shape.endX, shape.endY);
+				drawingContext.moveTo(shape.startX, shape.startY);
+				drawingContext.lineTo(shape.endX, shape.endY);
 				break;
 			case "rectangle":
-				ctx.rect(
+				drawingContext.rect(
 					shape.startX,
 					shape.startY,
 					shape.endX - shape.startX,
@@ -275,7 +293,7 @@ function redrawShapes() {
 					Math.abs(shape.endX - shape.startX),
 					Math.abs(shape.endY - shape.startY)
 				);
-				ctx.rect(
+				drawingContext.rect(
 					shape.startX,
 					shape.startY,
 					Math.sign(shape.endX - shape.startX) * squareSide,
@@ -283,7 +301,7 @@ function redrawShapes() {
 				);
 				break;
 			case "ellipse":
-				ctx.ellipse(
+				drawingContext.ellipse(
 					shape.startX,
 					shape.startY,
 					Math.abs(shape.endX - shape.startX),
@@ -298,7 +316,7 @@ function redrawShapes() {
 					Math.abs(shape.endX - shape.startX),
 					Math.abs(shape.endY - shape.startY)
 				);
-				ctx.ellipse(
+				drawingContext.ellipse(
 					shape.startX,
 					shape.startY,
 					circleRadius,
@@ -313,12 +331,12 @@ function redrawShapes() {
 				break;
 		}
 		if (selectedShapes.includes(shape)) {
-			ctx.strokeStyle = "red";
-			ctx.lineWidth = 2;
+			drawingContext.strokeStyle = "red";
+			drawingContext.lineWidth = 2;
 		}
-		ctx.stroke();
-		ctx.lineWidth = 1;
-		ctx.closePath();
+		drawingContext.stroke();
+		drawingContext.lineWidth = 1;
+		drawingContext.closePath();
 	});
 
 	updateObjectCount();
@@ -546,8 +564,8 @@ function loadDrawing() {
 			if (shape.type === "freehand") {
 				const imageData = new ImageData(
 					new Uint8ClampedArray(shape.path),
-					canvas.width,
-					canvas.height
+					drawingSurface.width,
+					drawingSurface.height
 				);
 				return { ...shape, path: imageData };
 			}
