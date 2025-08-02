@@ -61,7 +61,7 @@ function setMode(newMode) {
 	updateObjectCount();
 }
 
-function stopDrawingPolygon() {
+function finalizePolygonShape() {
 	if (polygonDrawing && polygonVertices.length > 1) {
 		savePolygon();
 		polygonDrawing = false;
@@ -75,7 +75,7 @@ drawingSurface.addEventListener("mousedown", (e) => {
 	drawingContext.strokeStyle = color;
 
 	if (drawingMode === "select") {
-		let shape = selectObject(startX, startY);
+		let shape = getShapeUnderPoint(startX, startY);
 		if (shape) {
 			if (!selectedShapes.includes(shape)) {
 				selectedShapes.push(shape);
@@ -190,7 +190,7 @@ drawingSurface.addEventListener("mousemove", (e) => {
 		}
 	} else if (drawingMode === "polygon" && polygonDrawing) {
 		redrawShapes();
-		drawPolygon([...polygonVertices, [currentX, currentY]]);
+		renderPolygon([...polygonVertices, [currentX, currentY]]);
 	}
 });
 
@@ -217,7 +217,7 @@ drawingSurface.addEventListener("mouseup", (e) => {
 });
 
 drawingSurface.addEventListener("dblclick", () => {
-	stopDrawingPolygon();
+	finalizePolygonShape();
 });
 
 function drawShape(drawFunc) {
@@ -228,7 +228,7 @@ function drawShape(drawFunc) {
 	drawingContext.closePath();
 }
 
-function drawPolygon(vertices) {
+function renderPolygon(vertices) {
 	if (vertices.length > 1) {
 		drawingContext.beginPath();
 		drawingContext.moveTo(vertices[0][0], vertices[0][1]);
@@ -327,7 +327,7 @@ function redrawShapes() {
 				);
 				break;
 			case "polygon":
-				drawPolygon(shape.vertices);
+				renderPolygon(shape.vertices);
 				break;
 		}
 		if (selectedShapes.includes(shape)) {
@@ -342,7 +342,7 @@ function redrawShapes() {
 	updateObjectCount();
 }
 
-function selectObject(x, y) {
+function getShapeUnderPoint(x, y) {
 	return shapes.find((shape) => {
 		switch (shape.type) {
 			case "line":
