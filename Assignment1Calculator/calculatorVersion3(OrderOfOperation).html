@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculator Version 3.0 - Order of Operations</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+    }
+
+    .calculator {
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      border-radius: 20px;
+      box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        0 8px 16px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      padding: 30px;
+      width: 400px;
+      max-width: 100%;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .title-section {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .title-section h1 {
+      font-size: 1.3em;
+      margin-bottom: 5px;
+      color: #2c3e50;
+    }
+
+    .title-section p {
+      font-size: 0.91em;
+      color: #555;
+    }
+
+    .display {
+      background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+      color: #00ff88;
+      font-size: 2.2em;
+      font-weight: 300;
+      text-align: right;
+      padding: 25px 20px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+      box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      overflow: hidden;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+
+    .button {
+      background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+      color: #495057;
+      font-size: 1.4em;
+      font-weight: 500;
+      padding: 20px 10px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: center;
+      box-shadow:
+        0 4px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.5s;
+    }
+
+    .button:hover::before {
+      left: 100%;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 16px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .button:active {
+      transform: translateY(0);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .button.function {
+      background: linear-gradient(145deg, #007bff, #0056b3);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .button.function:hover {
+      background: linear-gradient(145deg, #0056b3, #004085);
+      box-shadow:
+        0 8px 16px rgba(0, 123, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .button.memory {
+      background: linear-gradient(145deg, #ffc107, #e0a800);
+      color: #212529;
+      font-weight: 600;
+    }
+
+    .button.memory:hover {
+      background: linear-gradient(145deg, #e0a800, #d39e00);
+      box-shadow:
+        0 8px 16px rgba(255, 193, 7, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .button.clear {
+      background: linear-gradient(145deg, #dc3545, #c82333);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .button.clear:hover {
+      background: linear-gradient(145deg, #c82333, #a71e2a);
+      box-shadow:
+        0 8px 16px rgba(220, 53, 69, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .button.log {
+      background: linear-gradient(145deg, #6f42c1, #5a2d91);
+      color: #ffffff;
+      font-weight: 600;
+      grid-column: span 4;
+      font-size: 1.2em;
+      padding: 16px 12px;
+      margin-top: 5px;
+    }
+
+    .button.log:hover {
+      background: linear-gradient(145deg, #5a2d91, #4a1d7a);
+      box-shadow:
+        0 8px 16px rgba(111, 66, 193, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .button.enter {
+      grid-column: span 2;
+      background: linear-gradient(145deg, #28a745, #1e7e34);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .button.enter:hover {
+      background: linear-gradient(145deg, #1e7e34, #155724);
+      box-shadow:
+        0 8px 16px rgba(40, 167, 69, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    /* Responsive design */
+    @media (max-width: 480px) {
+      .calculator {
+        width: 100%;
+        max-width: 350px;
+        padding: 20px;
+      }
+
+      .display {
+        font-size: 1.8em;
+        padding: 20px 15px;
+      }
+
+      .button {
+        font-size: 1.2em;
+        padding: 15px 8px;
+      }
+    }
+
+    /* Focus styles for accessibility */
+    .button:focus {
+      outline: 2px solid #007bff;
+      outline-offset: 2px;
+    }
+
+    /* Animation for display updates */
+    .display {
+      transition: all 0.3s ease;
+    }
+
+    /* Custom scrollbar for display overflow */
+    .display::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .display::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    .display::-webkit-scrollbar-thumb {
+      background: rgba(0, 255, 136, 0.5);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="calculator">
+    <div class="title-section">
+      <h1>Order of Operations Calculator</h1>
+      <p>Advanced arithmetic with parentheses support</p>
+    </div>
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <!-- First row: Clear functions and memory -->
+      <button class="button clear" onclick="clearAll()">C</button>
+      <button class="button function" onclick="clearEntry()">CE</button>
+      <button class="button memory" onclick="memoryStore()">M</button>
+      <button class="button memory" onclick="memoryRecall()">MR</button>
+
+      <!-- Second row: 7, 8, 9, ÷ -->
+      <button class="button" onclick="appendCharacter('7')">7</button>
+      <button class="button" onclick="appendCharacter('8')">8</button>
+      <button class="button" onclick="appendCharacter('9')">9</button>
+      <button class="button function" onclick="appendCharacter('/')">÷</button>
+
+      <!-- Third row: 4, 5, 6, × -->
+      <button class="button" onclick="appendCharacter('4')">4</button>
+      <button class="button" onclick="appendCharacter('5')">5</button>
+      <button class="button" onclick="appendCharacter('6')">6</button>
+      <button class="button function" onclick="appendCharacter('x')">×</button>
+
+      <!-- Fourth row: 1, 2, 3, − -->
+      <button class="button" onclick="appendCharacter('1')">1</button>
+      <button class="button" onclick="appendCharacter('2')">2</button>
+      <button class="button" onclick="appendCharacter('3')">3</button>
+      <button class="button function" onclick="appendCharacter('-')">−</button>
+
+      <!-- Fifth row: 0, ., =, + -->
+      <button class="button" onclick="appendCharacter('0')">0</button>
+      <button class="button" onclick="appendCharacter('.')">.</button>
+      <button class="button enter" onclick="calculateResult()">=</button>
+      <button class="button function" onclick="appendCharacter('+')">+</button>
+
+      <!-- Sixth row: Parentheses -->
+      <button class="button function" onclick="appendCharacter('(')">(</button>
+      <button class="button" onclick="appendCharacter(')')">)</button>
+      <button class="button log" onclick="downloadLog()">Download Log</button>
+    </div>
+  </div>
+
+  <script>
+    // --- State Variables ---
+    let currentInput = "0";
+    let expressionStack = [];
+    let isNewNumber = true;
+
+    // --- Original Logging and Memory Variables ---
+    let memory = 0;
+    let log = [];
+
+    // --- DOM Reference ---
+    const display = document.getElementById("display");
+
+    function logKeyPress(key) {
+      const timestamp = new Date().toISOString();
+      log.push({ key, timestamp });
+    }
+
+    // --- Core Logic Functions ---
+
+    function updateDisplay() {
+      display.textContent = currentInput;
+    }
+
+    function appendCharacter(char) {
+      logKeyPress(char);
+
+      if ("0123456789.".includes(char)) {
+        if (isNewNumber) {
+          currentInput = char === "." ? "0." : char;
+          isNewNumber = false;
+        } else {
+          if (char === "." && currentInput.includes(".")) return;
+          currentInput += char;
+        }
+        updateDisplay();
+      } else if ("+-x/".includes(char)) {
+        if (currentInput !== "" && !isNewNumber) {
+          expressionStack.push(parseFloat(currentInput));
+        }
+        expressionStack.push(char);
+        isNewNumber = true;
+      } else if (char === '(') {
+        expressionStack.push(char);
+        isNewNumber = true;
+        currentInput = "0";
+        updateDisplay();
+      } else if (char === ')') {
+        if (currentInput !== "" && !isNewNumber) {
+          expressionStack.push(parseFloat(currentInput));
+        }
+
+        const openParenIndex = expressionStack.lastIndexOf('(');
+        if (openParenIndex !== -1) {
+          const subExpression = expressionStack.slice(openParenIndex + 1);
+          const result = evaluateExpression(subExpression);
+
+          expressionStack.splice(openParenIndex, expressionStack.length - openParenIndex);
+          expressionStack.push(result);
+
+          currentInput = String(result);
+          isNewNumber = true;
+          updateDisplay();
+        }
+      }
+    }
+
+    /**
+     * The calculation engine.
+     * NEW: Evaluates expressions strictly from left-to-right.
+     * @param {Array} expression - An array of numbers and operators (e.g., [5, '+', 3, 'x', 2])
+     * @returns {number} - The calculated result.
+     */
+    function evaluateExpression(expression) {
+      // Handle empty or incomplete expressions
+      if (expression.length === 0) return 0;
+      if (expression.length === 1) return expression[0];
+
+      // Start with the first number as the running total
+      let result = expression[0];
+
+      // Loop through the rest of the expression, taking one operator and one number at a time
+      for (let i = 1; i < expression.length; i += 2) {
+        const operator = expression[i];
+        const nextNumber = expression[i + 1];
+
+        // If there's a missing number (e.g., 5 * =)
+        if (nextNumber === undefined) {
+          return result;
+        }
+
+        switch (operator) {
+          case '+':
+            result += nextNumber;
+            break;
+          case '-':
+            result -= nextNumber;
+            break;
+          case 'x':
+            result *= nextNumber;
+            break;
+          case '/':
+            result /= nextNumber;
+            break;
+        }
+      }
+
+      return result;
+    }
+
+
+    /**
+     * Final calculation when '=' is pressed.
+     */
+    function calculateResult() {
+      logKeyPress("=");
+      if (currentInput !== "" && !isNewNumber) {
+        expressionStack.push(parseFloat(currentInput));
+      }
+
+      try {
+        if (expressionStack.includes('(')) {
+          throw new Error("Mismatched parentheses");
+        }
+
+        const finalResult = evaluateExpression(expressionStack);
+        currentInput = String(finalResult);
+        display.textContent = currentInput;
+
+        expressionStack = [];
+        isNewNumber = true;
+
+      } catch (error) {
+        display.textContent = "Error";
+        clearAll(false);
+      }
+    }
+
+
+    // --- UI Functions (Clear, Memory) ---
+
+    function clearEntry() {
+      logKeyPress("CE");
+      currentInput = "0";
+      isNewNumber = true;
+      updateDisplay();
+    }
+
+    function clearAll(doLog = true) {
+      if (doLog) logKeyPress("C");
+      currentInput = "0";
+      expressionStack = [];
+      isNewNumber = true;
+      memory = 0;
+      updateDisplay();
+    }
+
+    function memoryStore() {
+      logKeyPress("M");
+      try {
+        memory = parseFloat(currentInput);
+      } catch {
+        memory = 0;
+      }
+    }
+
+    function memoryRecall() {
+      logKeyPress("MR");
+      currentInput = String(memory);
+      isNewNumber = false;
+      updateDisplay();
+    }
+
+    // --- Log Download Function (Unchanged) ---
+    function downloadLog() {
+      const username = "OOC Calculator V.3";
+      const date = new Date().toISOString().split("T")[0];
+      const testCaseNumber = "a";
+      const filename = `${username}_${testCaseNumber}_${date}.csv`;
+
+      let csvContent = "Username,Test Case,Date,Key,Timestamp\n";
+      log.forEach((entry) => {
+        csvContent += `${username},${testCaseNumber},${date},${entry.key},${entry.timestamp}\n`;
+      });
+
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const link = document.createElement("a");
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  </script>
+</body>
+
+</html>

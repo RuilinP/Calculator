@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculator Version 1.0</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+    }
+
+    .calculator {
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+      border-radius: 20px;
+      box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        0 8px 16px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      padding: 30px;
+      width: 400px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .title-section {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .title-section h1 {
+      margin-bottom: 5px;
+      color: #2c3e50;
+    }
+
+    .title-section p {
+      font-size: 0.91em;
+      color: #555;
+    }
+
+    .display {
+      background: linear-gradient(145deg, #2c3e50, #34495e);
+      color: #ecf0f1;
+      font-size: 2.2em;
+      font-weight: 300;
+      text-align: right;
+      padding: 25px 20px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+      box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+
+    .button {
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+      color: #2c3e50;
+      font-size: 1.4em;
+      font-weight: 500;
+      padding: 20px 12px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow:
+        0 4px 8px rgba(0, 0, 0, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 16px rgba(0, 0, 0, 0.15),
+        0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .button:hover::before {
+      opacity: 1;
+    }
+
+    .button:active {
+      transform: translateY(0);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .button.function {
+      background: linear-gradient(145deg, #3498db, #2980b9);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .button.function:hover {
+      background: linear-gradient(145deg, #2980b9, #1f5f8b);
+    }
+
+    .button.equal {
+      background: linear-gradient(145deg, #f39c12, #e67e22);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .button.equal:hover {
+      background: linear-gradient(145deg, #e67e22, #d35400);
+    }
+
+    .button.memory {
+      background: linear-gradient(145deg, #9b59b6, #8e44ad);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .button.memory:hover {
+      background: linear-gradient(145deg, #8e44ad, #7d3c98);
+    }
+
+    .button.clear {
+      background: linear-gradient(145deg, #e74c3c, #c0392b);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .button.clear:hover {
+      background: linear-gradient(145deg, #c0392b, #a93226);
+    }
+
+    .button.log {
+      background: linear-gradient(145deg, #27ae60, #229954);
+      color: #ffffff;
+      font-weight: 600;
+      grid-column: span 4;
+      font-size: 1.2em;
+      padding: 16px 12px;
+      margin-top: 5px;
+    }
+
+    .button.log:hover {
+      background: linear-gradient(145deg, #229954, #1e8449);
+    }
+
+    /* Responsive design */
+    @media (max-width: 480px) {
+      .calculator {
+        width: 100%;
+        max-width: 350px;
+        padding: 20px;
+      }
+
+      .display {
+        font-size: 1.8em;
+        padding: 20px 15px;
+      }
+
+      .button {
+        font-size: 1.2em;
+        padding: 15px 10px;
+      }
+
+      .button.log {
+        font-size: 1.1em;
+        padding: 14px 10px;
+      }
+    }
+
+    /* Smooth animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .calculator {
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    /* Focus states for accessibility */
+    .button:focus {
+      outline: 2px solid #3498db;
+      outline-offset: 2px;
+    }
+
+    /* Custom scrollbar for webkit browsers */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="calculator">
+    <div class="title-section">
+      <h1>INFIX Calculator</h1>
+      <p>Basic arithmetic operations with memory functions</p>
+    </div>
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <!-- First row: Clear functions -->
+      <button class="button clear" onclick="clearDisplay()">C</button>
+      <button class="button function" onclick="clearEntry()">CE</button>
+      <button class="button memory" onclick="memoryStore()">M</button>
+      <button class="button memory" onclick="memoryRecall()">MR</button>
+
+      <!-- Second row: 7, 8, 9, ÷ -->
+      <button class="button" onclick="appendNumber('7')">7</button>
+      <button class="button" onclick="appendNumber('8')">8</button>
+      <button class="button" onclick="appendNumber('9')">9</button>
+      <button class="button function" onclick="appendOperator('/')">÷</button>
+
+      <!-- Third row: 4, 5, 6, × -->
+      <button class="button" onclick="appendNumber('4')">4</button>
+      <button class="button" onclick="appendNumber('5')">5</button>
+      <button class="button" onclick="appendNumber('6')">6</button>
+      <button class="button function" onclick="appendOperator('x')">×</button>
+
+      <!-- Fourth row: 1, 2, 3, − -->
+      <button class="button" onclick="appendNumber('1')">1</button>
+      <button class="button" onclick="appendNumber('2')">2</button>
+      <button class="button" onclick="appendNumber('3')">3</button>
+      <button class="button function" onclick="appendOperator('-')">−</button>
+
+      <!-- Fifth row: 0, ., =, + -->
+      <button class="button" onclick="appendNumber('0')">0</button>
+      <button class="button" onclick="appendDecimal()">.</button>
+      <button class="button equal" onclick="calculate()">=</button>
+      <button class="button function" onclick="appendOperator('+')">+</button>
+
+      <!-- Download log button -->
+      <button class="button log" onclick="downloadLog()">Download Log</button>
+    </div>
+  </div>
+
+  <script>
+    let currentInput = "";
+    let operator = "";
+    let operand1 = "";
+    let operand2 = "";
+    let memory = 0;
+    let log = [];
+
+    function logKeyPress(key) {
+      const timestamp = new Date().toISOString();
+      log.push({ key, timestamp });
+    }
+
+    function appendNumber(number) {
+      if (operator === "") {
+        operand1 += number;
+        displayValue(operand1);
+      } else {
+        operand2 += number;
+        displayValue(operand2);
+      }
+      logKeyPress(number);
+    }
+
+    function appendDecimal() {
+      if (operator === "" && !operand1.includes(".")) {
+        operand1 += ".";
+        displayValue(operand1);
+      } else if (operator !== "" && !operand2.includes(".")) {
+        operand2 += ".";
+        displayValue(operand2);
+      }
+      logKeyPress(".");
+    }
+
+    function appendOperator(op) {
+      if (operator === "") {
+        operator = op;
+      } else {
+        calculate();
+        operator = op;
+      }
+      logKeyPress(op);
+    }
+
+    function displayValue(value) {
+      document.getElementById("display").textContent = value;
+    }
+
+    function clearDisplay() {
+      currentInput = "";
+      operator = "";
+      operand1 = "";
+      operand2 = "";
+      displayValue("0");
+      logKeyPress("C");
+    }
+
+    function clearEntry() {
+      if (operator === "") {
+        operand1 = "";
+        displayValue("0");
+      } else {
+        operand2 = "";
+        displayValue("0");
+      }
+      logKeyPress("CE");
+    }
+
+    function memoryStore() {
+      memory = parseFloat(document.getElementById("display").textContent);
+      logKeyPress("M");
+    }
+
+    function memoryRecall() {
+      displayValue(memory);
+      if (operator === "") {
+        operand1 = memory.toString();
+      } else {
+        operand2 = memory.toString();
+      }
+      logKeyPress("MR");
+    }
+
+    function calculate() {
+      let result;
+      switch (operator) {
+        case "+":
+          result = parseFloat(operand1) + parseFloat(operand2);
+          break;
+        case "-":
+          result = parseFloat(operand1) - parseFloat(operand2);
+          break;
+        case "x":
+          result = parseFloat(operand1) * parseFloat(operand2);
+          break;
+        case "/":
+          result = parseFloat(operand1) / parseFloat(operand2);
+          break;
+        default:
+          return;
+      }
+
+      displayValue(result);
+      logKeyPress("=");
+      operand1 = result.toString();
+      operator = "";
+      operand2 = "";
+    }
+
+    function downloadLog() {
+      const username = "INFIX Calculator V.1";
+      const date = new Date().toISOString().split("T")[0];
+      const testCaseNumber = "a";
+      const filename = `${username}_${testCaseNumber}_${date}.csv`;
+
+      let csvContent = "Username,Test Case,Date,Key,Timestamp\n";
+      log.forEach((entry) => {
+        csvContent += `${username},${testCaseNumber},${date},${entry.key},${entry.timestamp}\n`;
+      });
+
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const link = document.createElement("a");
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+  </script>
+</body>
+
+</html>
