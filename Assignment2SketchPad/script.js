@@ -1,6 +1,7 @@
 let drawingSurface = document.getElementById("drawingCanvas");
 let drawingContext = drawingSurface.getContext("2d");
-function adjustCanvasSize() {
+
+function resizeCanvasToFitWindow() {
 	const headerHeight = document.querySelector(".app-header").offsetHeight;
 	const footerHeight = document.querySelector(".app-footer").offsetHeight;
 	const leftToolbarWidth =
@@ -18,8 +19,8 @@ function adjustCanvasSize() {
 		window.innerHeight - headerHeight - footerHeight - containerPadding;
 }
 
-window.addEventListener("resize", adjustCanvasSize);
-adjustCanvasSize();
+window.addEventListener("resize", resizeCanvasToFitWindow);
+resizeCanvasToFitWindow();
 
 let isDrawing = false;
 let drawingMode = "freehand";
@@ -41,7 +42,7 @@ document.getElementById("colorPicker").addEventListener("input", (e) => {
 	document.getElementById("currentColor").textContent = color;
 });
 
-function setMode(newMode) {
+function switchDrawingMode(newMode) {
 	drawingMode = newMode;
 	document.getElementById("currentMode").textContent =
 		drawingMode.charAt(0).toUpperCase() + drawingMode.slice(1);
@@ -57,13 +58,13 @@ function setMode(newMode) {
 	if (newMode !== "select") {
 		selectedShapes = [];
 	}
-	redrawShapes();
-	updateObjectCount();
+	refreshCanvasDisplay();
+	updateShapeCounter();
 }
 
-function finalizePolygonShape() {
+function completePolygonDrawing() {
 	if (polygonDrawing && polygonVertices.length > 1) {
-		savePolygon();
+		storePolygonShape();
 		polygonDrawing = false;
 		polygonVertices = [];
 	}
@@ -75,7 +76,7 @@ drawingSurface.addEventListener("mousedown", (e) => {
 	drawingContext.strokeStyle = color;
 
 	if (drawingMode === "select") {
-		let shape = getShapeUnderPoint(startX, startY);
+		let shape = findShapeAtPosition(startX, startY);
 		if (shape) {
 			if (!selectedShapes.includes(shape)) {
 				selectedShapes.push(shape);
@@ -98,7 +99,7 @@ drawingSurface.addEventListener("mousedown", (e) => {
 			drawingContext.moveTo(startX, startY);
 		}
 	}
-	redrawShapes();
+	refreshCanvasDisplay();
 });
 
 drawingSurface.addEventListener("mousemove", (e) => {
@@ -108,7 +109,7 @@ drawingSurface.addEventListener("mousemove", (e) => {
 	let currentY = e.offsetY;
 
 	if (dragging && selectedShapes.length > 0) {
-		moveObjects(currentX - startX, currentY - startY);
+		translateSelectedShapes(currentX - startX, currentY - startY);
 		startX = currentX;
 		startY = currentY;
 	} else if (isDrawing) {
@@ -118,7 +119,7 @@ drawingSurface.addEventListener("mousemove", (e) => {
 				drawingContext.stroke();
 				break;
 			case "line":
-				redrawShapes();
+				refreshCanvasDisplay();
 				drawingContext.beginPath();
 				drawingContext.moveTo(startX, startY);
 				drawingContext.lineTo(currentX, currentY);
@@ -126,7 +127,7 @@ drawingSurface.addEventListener("mousemove", (e) => {
 				drawingContext.closePath();
 				break;
 			case "rectangle":
-				redrawShapes();
+				refreshCanvasDisplay();
 				drawingContext.beginPath();
 				drawingContext.rect(
 					startX,
@@ -138,7 +139,7 @@ drawingSurface.addEventListener("mousemove", (e) => {
 				drawingContext.closePath();
 				break;
 			case "square":
-				redrawShapes();
+				refreshCanvasDisplay();
 				drawingContext.beginPath();
 				const side = Math.min(
 					Math.abs(currentX - startX),
@@ -154,7 +155,7 @@ drawingSurface.addEventListener("mousemove", (e) => {
 				drawingContext.closePath();
 				break;
 			case "ellipse":
-				redrawShapes();
+				refreshCanvasDisplay();
 				drawingContext.beginPath();
 				drawingContext.ellipse(
 					startX,
@@ -169,7 +170,7 @@ drawingSurface.addEventListener("mousemove", (e) => {
 				drawingContext.closePath();
 				break;
 			case "circle":
-				redrawShapes();
+				refreshCanvasDisplay();
 				drawingContext.beginPath();
 				const radius = Math.min(
 					Math.abs(currentX - startX),
@@ -189,8 +190,8 @@ drawingSurface.addEventListener("mousemove", (e) => {
 				break;
 		}
 	} else if (drawingMode === "polygon" && polygonDrawing) {
-		redrawShapes();
-		renderPolygon([...polygonVertices, [currentX, currentY]]);
+		refreshCanvasDisplay();
+		renderPolygonPreview([...polygonVertices, [currentX, currentY]]);
 	}
 });
 
@@ -209,26 +210,26 @@ drawingSurface.addEventListener("mouseup", (e) => {
 			color: color,
 		});
 		drawingContext.beginPath();
-		saveState();
+		recordCurrentState();
 	} else if (drawingMode !== "select" && drawingMode !== "polygon") {
-		saveShape(e.offsetX, e.offsetY);
+		storeDrawnShape(e.offsetX, e.offsetY);
 	}
 	drawingContext.closePath();
 });
 
 drawingSurface.addEventListener("dblclick", () => {
-	finalizePolygonShape();
+	completePolygonDrawing();
 });
 
-function drawShape(drawFunc) {
-	redrawShapes();
+function executeShapeDrawing(drawFunc) {
+	refreshCanvasDisplay();
 	drawingContext.beginPath();
 	drawFunc();
 	drawingContext.stroke();
 	drawingContext.closePath();
 }
 
-function renderPolygon(vertices) {
+function renderPolygonPreview(vertices) {
 	if (vertices.length > 1) {
 		drawingContext.beginPath();
 		drawingContext.moveTo(vertices[0][0], vertices[0][1]);
@@ -240,7 +241,7 @@ function renderPolygon(vertices) {
 	}
 }
 
-function saveShape(endX, endY) {
+function storeDrawnShape(endX, endY) {
 	shapes.push({
 		type: drawingMode,
 		startX: startX,
@@ -249,23 +250,23 @@ function saveShape(endX, endY) {
 		endY: endY,
 		color: color,
 	});
-	saveState();
-	redrawShapes();
+	recordCurrentState();
+	refreshCanvasDisplay();
 }
 
-function savePolygon() {
+function storePolygonShape() {
 	if (polygonVertices.length > 1) {
 		shapes.push({
 			type: "polygon",
 			vertices: polygonVertices,
 			color: color,
 		});
-		saveState();
+		recordCurrentState();
 	}
-	redrawShapes();
+	refreshCanvasDisplay();
 }
 
-function redrawShapes() {
+function refreshCanvasDisplay() {
 	drawingContext.clearRect(0, 0, drawingSurface.width, drawingSurface.height);
 	shapes.forEach((shape) => {
 		drawingContext.strokeStyle = shape.color;
@@ -327,7 +328,7 @@ function redrawShapes() {
 				);
 				break;
 			case "polygon":
-				renderPolygon(shape.vertices);
+				renderPolygonPreview(shape.vertices);
 				break;
 		}
 		if (selectedShapes.includes(shape)) {
@@ -339,14 +340,14 @@ function redrawShapes() {
 		drawingContext.closePath();
 	});
 
-	updateObjectCount();
+	updateShapeCounter();
 }
 
-function getShapeUnderPoint(x, y) {
+function findShapeAtPosition(x, y) {
 	return shapes.find((shape) => {
 		switch (shape.type) {
 			case "line":
-				return isPointOnLine(
+				return checkPointOnLine(
 					shape.startX,
 					shape.startY,
 					shape.endX,
@@ -379,7 +380,7 @@ function getShapeUnderPoint(x, y) {
 					y <= squareYEnd
 				);
 			case "ellipse":
-				return isPointInEllipse(
+				return checkPointInEllipse(
 					shape.startX,
 					shape.startY,
 					Math.abs(shape.endX - shape.startX),
@@ -392,7 +393,7 @@ function getShapeUnderPoint(x, y) {
 					Math.abs(shape.endX - shape.startX),
 					Math.abs(shape.endY - shape.startY)
 				);
-				return isPointInEllipse(
+				return checkPointInEllipse(
 					shape.startX,
 					shape.startY,
 					circleRadius,
@@ -401,14 +402,14 @@ function getShapeUnderPoint(x, y) {
 					y
 				);
 			case "polygon":
-				return isPointInPolygon(shape.vertices, x, y);
+				return checkPointInPolygon(shape.vertices, x, y);
 			case "freehand":
 				return false;
 		}
 	});
 }
 
-function isPointOnLine(x1, y1, x2, y2, px, py) {
+function checkPointOnLine(x1, y1, x2, y2, px, py) {
 	const tolerance = 5;
 	const distToLine =
 		Math.abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1) /
@@ -416,7 +417,7 @@ function isPointOnLine(x1, y1, x2, y2, px, py) {
 	return distToLine <= tolerance;
 }
 
-function isPointInEllipse(cx, cy, rx, ry, px, py) {
+function checkPointInEllipse(cx, cy, rx, ry, px, py) {
 	return (
 		Math.pow(px - cx, 2) / Math.pow(rx, 2) +
 			Math.pow(py - cy, 2) / Math.pow(ry, 2) <=
@@ -424,7 +425,7 @@ function isPointInEllipse(cx, cy, rx, ry, px, py) {
 	);
 }
 
-function isPointInPolygon(vertices, px, py) {
+function checkPointInPolygon(vertices, px, py) {
 	let inside = false;
 	for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
 		const xi = vertices[i][0],
@@ -440,7 +441,7 @@ function isPointInPolygon(vertices, px, py) {
 	return inside;
 }
 
-function moveObjects(dx, dy) {
+function translateSelectedShapes(dx, dy) {
 	selectedShapes.forEach((shape) => {
 		if (shape.type === "polygon") {
 			shape.vertices = shape.vertices.map(([vx, vy]) => [
@@ -454,26 +455,26 @@ function moveObjects(dx, dy) {
 			shape.endY += dy;
 		}
 	});
-	saveState();
-	redrawShapes();
+	recordCurrentState();
+	refreshCanvasDisplay();
 }
 
-function cutObject() {
+function removeSelectedShapes() {
 	if (selectedShapes.length > 0) {
 		shapes = shapes.filter((shape) => !selectedShapes.includes(shape));
 		selectedShapes = [];
-		saveState();
-		redrawShapes();
+		recordCurrentState();
+		refreshCanvasDisplay();
 	}
 }
 
-function copyObject() {
+function duplicateSelectedShapes() {
 	if (selectedShapes.length > 0) {
 		clipboard = selectedShapes.map((shape) => ({ ...shape }));
 	}
 }
 
-function pasteObject() {
+function insertCopiedShapes() {
 	if (clipboard && clipboard.length > 0) {
 		const offset = 10;
 		clipboard.forEach((shape) => {
@@ -491,57 +492,57 @@ function pasteObject() {
 			}
 			shapes.push(newShape);
 		});
-		saveState();
-		redrawShapes();
+		recordCurrentState();
+		refreshCanvasDisplay();
 	}
 }
 
-function groupObjects() {
+function combineSelectedShapes() {
 	if (selectedShapes.length > 0) {
 		const groupId = groupCounter++;
 		selectedShapes.forEach((shape) => (shape.group = groupId));
 		selectedShapes = [];
-		saveState();
-		redrawShapes();
+		recordCurrentState();
+		refreshCanvasDisplay();
 	}
 }
 
-function ungroupObjects() {
+function separateGroupedShapes() {
 	shapes.forEach((shape) => delete shape.group);
 	selectedShapes = [];
-	saveState();
-	redrawShapes();
+	recordCurrentState();
+	refreshCanvasDisplay();
 }
 
-function undo() {
+function revertLastAction() {
 	if (undoStack.length > 0) {
 		redoStack.push(JSON.stringify(shapes));
 		shapes = JSON.parse(undoStack.pop());
-		redrawShapes();
+		refreshCanvasDisplay();
 	}
 }
 
-function redo() {
+function restoreUndoneAction() {
 	if (redoStack.length > 0) {
 		undoStack.push(JSON.stringify(shapes));
 		shapes = JSON.parse(redoStack.pop());
-		redrawShapes();
+		refreshCanvasDisplay();
 	}
 }
 
-function saveState() {
+function recordCurrentState() {
 	undoStack.push(JSON.stringify(shapes));
 	redoStack = [];
 }
 
-function updateObjectCount() {
+function updateShapeCounter() {
 	const objectCountElement = document.getElementById("objectCount");
 	if (objectCountElement) {
 		objectCountElement.textContent = shapes.length;
 	}
 }
 
-function saveDrawing() {
+function exportDrawingToStorage() {
 	const drawingData = shapes.map((shape) => {
 		if (shape.type === "freehand") {
 			return {
@@ -554,10 +555,10 @@ function saveDrawing() {
 	localStorage.setItem("drawing", JSON.stringify(drawingData));
 
 	// Show success message
-	showNotification("Drawing saved successfully!", "success");
+	displayUserNotification("Drawing saved successfully!", "success");
 }
 
-function loadDrawing() {
+function importDrawingFromStorage() {
 	const drawingData = localStorage.getItem("drawing");
 	if (drawingData) {
 		shapes = JSON.parse(drawingData).map((shape) => {
@@ -571,16 +572,16 @@ function loadDrawing() {
 			}
 			return shape;
 		});
-		redrawShapes();
-		updateObjectCount();
-		showNotification("Drawing loaded successfully!", "success");
+		refreshCanvasDisplay();
+		updateShapeCounter();
+		displayUserNotification("Drawing loaded successfully!", "success");
 	} else {
-		showNotification("No saved drawing found.", "info");
+		displayUserNotification("No saved drawing found.", "info");
 	}
 }
 
 // Notification system
-function showNotification(message, type = "info") {
+function displayUserNotification(message, type = "info") {
 	// Remove existing notifications
 	const existingNotifications = document.querySelectorAll(".notification");
 	existingNotifications.forEach((notification) => notification.remove());
@@ -608,8 +609,8 @@ function showNotification(message, type = "info") {
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", () => {
-	updateObjectCount();
-	showNotification(
+	updateShapeCounter();
+	displayUserNotification(
 		"Welcome to Professional Sketchpad! Start drawing to create your masterpiece.",
 		"info"
 	);
@@ -617,18 +618,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.addEventListener("keydown", (e) => {
 	if (e.ctrlKey && e.key === "x") {
-		cutObject();
+		removeSelectedShapes();
 	}
 	if (e.ctrlKey && e.key === "c") {
-		copyObject();
+		duplicateSelectedShapes();
 	}
 	if (e.ctrlKey && e.key === "v") {
-		pasteObject();
+		insertCopiedShapes();
 	}
 	if (e.ctrlKey && e.key === "z") {
-		undo();
+		revertLastAction();
 	}
 	if (e.ctrlKey && e.key === "y") {
-		redo();
+		restoreUndoneAction();
 	}
 });

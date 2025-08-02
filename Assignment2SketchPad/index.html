@@ -21,11 +21,11 @@
           Professional Sketchpad
         </h1>
         <div class="header-controls">
-          <button onclick="saveDrawing()" class="btn btn-primary" title="Save your drawing">
+          <button onclick="exportDrawingToStorage()" class="btn btn-primary" title="Save your drawing">
             <span class="btn-icon">💾</span>
             Save
           </button>
-          <button onclick="loadDrawing()" class="btn btn-secondary" title="Load a saved drawing">
+          <button onclick="importDrawingFromStorage()" class="btn btn-secondary" title="Load a saved drawing">
             <span class="btn-icon">📂</span>
             Load
           </button>
@@ -40,44 +40,46 @@
         <div class="toolbar-section">
           <h3 class="toolbar-title">Drawing Tools</h3>
           <div class="tool-group">
-            <button onclick="setMode('freehand')" class="tool-btn" id="btn-freehand" title="Freehand drawing">
+            <button onclick="switchDrawingMode('freehand')" class="tool-btn" id="btn-freehand" title="Freehand drawing">
               <span class="tool-icon">✏️</span>
               <span class="tool-label">Freehand</span>
             </button>
-            <button onclick="setMode('line')" class="tool-btn" id="btn-line" title="Draw straight lines">
+            <button onclick="switchDrawingMode('line')" class="tool-btn" id="btn-line" title="Draw straight lines">
               <span class="tool-icon">📏</span>
               <span class="tool-label">Line</span>
             </button>
           </div>
 
           <div class="tool-group">
-            <button onclick="setMode('rectangle')" class="tool-btn" id="btn-rectangle" title="Draw rectangles">
+            <button onclick="switchDrawingMode('rectangle')" class="tool-btn" id="btn-rectangle"
+              title="Draw rectangles">
               <span class="tool-icon">⬛</span>
               <span class="tool-label">Rectangle</span>
             </button>
-            <button onclick="setMode('square')" class="tool-btn" id="btn-square" title="Draw perfect squares">
+            <button onclick="switchDrawingMode('square')" class="tool-btn" id="btn-square" title="Draw perfect squares">
               <span class="tool-icon">🟦</span>
               <span class="tool-label">Square</span>
             </button>
           </div>
 
           <div class="tool-group">
-            <button onclick="setMode('ellipse')" class="tool-btn" id="btn-ellipse" title="Draw ellipses">
+            <button onclick="switchDrawingMode('ellipse')" class="tool-btn" id="btn-ellipse" title="Draw ellipses">
               <span class="tool-icon">⭕</span>
               <span class="tool-label">Ellipse</span>
             </button>
-            <button onclick="setMode('circle')" class="tool-btn" id="btn-circle" title="Draw perfect circles">
+            <button onclick="switchDrawingMode('circle')" class="tool-btn" id="btn-circle" title="Draw perfect circles">
               <span class="tool-icon">🔵</span>
               <span class="tool-label">Circle</span>
             </button>
           </div>
 
           <div class="tool-group">
-            <button onclick="setMode('polygon')" class="tool-btn" id="btn-polygon" title="Draw custom polygons">
+            <button onclick="switchDrawingMode('polygon')" class="tool-btn" id="btn-polygon"
+              title="Draw custom polygons">
               <span class="tool-icon">🔺</span>
               <span class="tool-label">Polygon</span>
             </button>
-            <button onclick="finalizePolygonShape()" class="tool-btn btn-warning" title="Complete polygon drawing">
+            <button onclick="completePolygonDrawing()" class="tool-btn btn-warning" title="Complete polygon drawing">
               <span class="tool-icon">⛔</span>
               <span class="tool-label">Finish</span>
             </button>
@@ -87,11 +89,12 @@
         <div class="toolbar-section">
           <h3 class="toolbar-title">Selection & Edit</h3>
           <div class="tool-group">
-            <button onclick="setMode('select')" class="tool-btn" id="btn-select" title="Select and move objects">
+            <button onclick="switchDrawingMode('select')" class="tool-btn" id="btn-select"
+              title="Select and move objects">
               <span class="tool-icon">🖱️</span>
               <span class="tool-label">Select</span>
             </button>
-            <button onclick="ungroupObjects()" class="tool-btn" title="Ungroup selected objects">
+            <button onclick="separateGroupedShapes()" class="tool-btn" title="Ungroup selected objects">
               <span class="tool-icon">🔓</span>
               <span class="tool-label">Ungroup</span>
             </button>
@@ -101,15 +104,15 @@
         <div class="toolbar-section">
           <h3 class="toolbar-title">Edit Operations</h3>
           <div class="tool-group">
-            <button onclick="cutObject()" class="tool-btn" title="Cut selected objects">
+            <button onclick="removeSelectedShapes()" class="tool-btn" title="Cut selected objects">
               <span class="tool-icon">✂️</span>
               <span class="tool-label">Cut</span>
             </button>
-            <button onclick="copyObject()" class="tool-btn" title="Copy selected objects">
+            <button onclick="duplicateSelectedShapes()" class="tool-btn" title="Copy selected objects">
               <span class="tool-icon">📋</span>
               <span class="tool-label">Copy</span>
             </button>
-            <button onclick="pasteObject()" class="tool-btn" title="Paste copied objects">
+            <button onclick="insertCopiedShapes()" class="tool-btn" title="Paste copied objects">
               <span class="tool-icon">📎</span>
               <span class="tool-label">Paste</span>
             </button>
@@ -119,11 +122,11 @@
         <div class="toolbar-section">
           <h3 class="toolbar-title">History</h3>
           <div class="tool-group">
-            <button onclick="undo()" class="tool-btn" title="Undo last action">
+            <button onclick="revertLastAction()" class="tool-btn" title="Undo last action">
               <span class="tool-icon">↩️</span>
               <span class="tool-label">Undo</span>
             </button>
-            <button onclick="redo()" class="tool-btn" title="Redo last undone action">
+            <button onclick="restoreUndoneAction()" class="tool-btn" title="Redo last undone action">
               <span class="tool-icon">↪️</span>
               <span class="tool-label">Redo</span>
             </button>
